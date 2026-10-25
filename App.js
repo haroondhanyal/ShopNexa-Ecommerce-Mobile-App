@@ -28,6 +28,14 @@ const HOME_FASHION_IMAGE = require('./assets/home-fashion.png');
 const HOME_TECH_IMAGE = require('./assets/home-tech.png');
 const HOME_APPLIANCES_IMAGE = require('./assets/home-appliances.png');
 const homeImageFor = (category = '', title = '') => { const heading = `${category} ${title}`.toLowerCase(); if (/phone|mobile|laptop|computer|tech|electronic|gadget/.test(heading)) return HOME_TECH_IMAGE; if (/home|appliance|kitchen|fridge|refrigerator|oven|tv|furniture/.test(heading)) return HOME_APPLIANCES_IMAGE; if (/fashion|clothing|apparel|wear|men|women|watch|shoe|beauty|style/.test(heading)) return HOME_FASHION_IMAGE; return HOME_HERO_IMAGE; };
+const categoryImageFor = (name = '', productList = []) => {
+  const normalizedName = name.trim().toLowerCase();
+  const localCategory = categories.find((item) => item.name.trim().toLowerCase() === normalizedName);
+  if (localCategory?.image) return { uri: fullImage(localCategory.image) };
+  const product = productList.find((item) => item.category?.trim().toLowerCase() === normalizedName && item.image);
+  if (product?.image) return { uri: fullImage(product.image) };
+  return homeImageFor(name);
+};
 const THEME_COLORS = [
   { name: 'Ocean', color: '#2451c5' }, { name: 'Violet', color: '#7047c8' },
   { name: 'Rose', color: '#b13258' }, { name: 'Coral', color: '#b83c2a' },
@@ -93,7 +101,12 @@ function ShopProvider({ children }) {
       setApiState(productResult.value.data.source === 'demo' ? 'Demo catalog · add MongoDB for accounts and orders' : 'Connected to ShopNexa API');
     } else setApiState('Showing starter products · API is offline');
     if (categoryResult.status === 'fulfilled' && categoryResult.value.data.categories?.length) {
-      setCategoryItems(categoryResult.value.data.categories.map((item) => ({ ...item, image: item.image || categories.find((local) => local.name === item.name)?.image || categories[0].image })));
+      const catalogProducts = productResult.status === 'fulfilled' ? productResult.value.data.products || demoProducts : demoProducts;
+      setCategoryItems(categoryResult.value.data.categories.map((item) => {
+        const localImage = categories.find((local) => local.name.trim().toLowerCase() === item.name?.trim().toLowerCase())?.image;
+        const matchingProduct = catalogProducts.find((product) => product.category?.trim().toLowerCase() === item.name?.trim().toLowerCase() && product.image);
+        return { ...item, image: item.image || localImage || matchingProduct?.image || '' };
+      }));
     }
     if (bannerResult.status === 'fulfilled') setBanners(bannerResult.value.data.banners || []);
     setRefreshing(false);
@@ -215,8 +228,7 @@ function ProductCard({ item, navigation }) {
 }
 function CategoryTile({ category, products, navigation }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const product = products.find((item) => item.category === category.name && item.image);
-  const source = imageFailed ? homeImageFor(category.name) : category.image ? { uri: fullImage(category.image) } : product?.image ? { uri: fullImage(product.image) } : homeImageFor(category.name);
+  const source = imageFailed ? categoryImageFor(category.name, products) : category.image ? { uri: fullImage(category.image) } : categoryImageFor(category.name, products);
   return <Pressable style={styles.categoryItem} onPress={() => navigation.navigate('Shop', { search: '', category: category.name })}><Image source={source} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.categoryImage} /><View style={styles.categoryCaption}><Text numberOfLines={2} style={styles.categoryName}>{category.name}</Text><Ionicons name="arrow-forward-circle" size={20} color="#fff" /></View></Pressable>;
 }
 function HomeHeroCard({ card, width, navigation }) {
