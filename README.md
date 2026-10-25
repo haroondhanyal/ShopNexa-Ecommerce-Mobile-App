@@ -15,7 +15,7 @@ The home experience includes an illustrated campaign carousel and image-led cate
 
 ## Fresh app screenshots
 
-These screenshots were captured from the Android app running in a Pixel 7 Pro emulator on October 26, 2026. They show the current guest experience and the empty states presented before customer data is available.
+These screenshots were captured from the Android app running in a Pixel 7 Pro emulator on October 26, 2026. They include the guest flow, local catalogue fallback, and empty states shown before an account has customer data.
 
 | Onboarding | Home, campaigns and category cards |
 |---|---|
@@ -41,11 +41,15 @@ These screenshots were captured from the Android app running in a Pixel 7 Pro em
 |---|---|
 | ![Help and support](docs/screenshots/11-support.png) | ![Empty shopping bag](docs/screenshots/12-cart-empty.png) |
 
-| Drawer appearance controls | |
+| Drawer appearance controls | Product cards |
 |---|---|
-| ![Appearance themes in the drawer](docs/screenshots/13-drawer-appearance.png) | |
+| ![Appearance themes in the drawer](docs/screenshots/13-drawer-appearance.png) | ![Product card grid](docs/screenshots/14-product-grid.png) |
 
-> Product lists, checkout, saved addresses, wallets, seller tools, and the admin dashboard depend on a reachable API and the appropriate account role. Those authenticated or populated states are listed below but are not represented as fabricated screenshots. Connect the backend and sign in with demo data to capture them.
+| Product details | Admin mobile sign-in |
+|---|---|
+| ![Product details](docs/screenshots/15-product-details.png) | ![Mobile admin sign-in](docs/screenshots/16-admin-sign-in.png) |
+
+> Checkout, saved addresses, linked wallets, seller tools, and the admin dashboard depend on a reachable API and the appropriate account role. The admin sign-in screen is included; authenticated dashboards and populated account data are not fabricated. Connect the backend and sign in with demo data to view those states.
 
 ## Screen and component map
 
