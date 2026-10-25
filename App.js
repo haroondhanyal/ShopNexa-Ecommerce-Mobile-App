@@ -23,11 +23,22 @@ const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const BLUE = '#2451c5';
 const PAYMENT_LABELS = { COD: 'Cash on delivery', BANK_TRANSFER: 'Bank transfer', EASYPAISA: 'Easypaisa wallet', JAZZCASH: 'JazzCash wallet', DEMO_CARD: 'Offline demo card (no real charge)' };
-const HOME_HERO_IMAGE = require('./assets/home-shopping-hero.png');
-const HOME_FASHION_IMAGE = require('./assets/home-fashion.png');
-const HOME_TECH_IMAGE = require('./assets/home-tech.png');
-const HOME_APPLIANCES_IMAGE = require('./assets/home-appliances.png');
-const homeImageFor = (category = '', title = '') => { const heading = `${category} ${title}`.toLowerCase(); if (/phone|mobile|laptop|computer|tech|electronic|gadget/.test(heading)) return HOME_TECH_IMAGE; if (/home|appliance|kitchen|fridge|refrigerator|oven|tv|furniture/.test(heading)) return HOME_APPLIANCES_IMAGE; if (/fashion|clothing|apparel|wear|men|women|watch|shoe|beauty|style/.test(heading)) return HOME_FASHION_IMAGE; return HOME_HERO_IMAGE; };
+const HOME_SHOPPING_PHOTO = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=85';
+const homeImageFor = (category = '', title = '') => {
+  const heading = `${category} ${title}`.toLowerCase();
+  const exact = categories.find((item) => item.name.trim().toLowerCase() === category.trim().toLowerCase());
+  if (exact?.image) return { uri: exact.image };
+  const aliases = [
+    [/\b(kid|child|baby)\w*/,'Kids'], [/\b(women|woman|ladies|female)\w*/,"Women"], [/\b(men|man|male)\w*/,'Men'],
+    [/watch/,'Men\'s Watches'], [/shoe|footwear|sneaker/,'Shoes'], [/bag|purse/,'Bags'], [/jewel|accessor/,'Jewelry'],
+    [/beauty|cosmetic|skincare|makeup/,'Beauty'], [/phone|mobile/,'Mobile Phones'], [/laptop|computer|tablet/,'Laptops & Computers'],
+    [/home|appliance|kitchen|fridge|refrigerator|oven|television|\btv\b|furniture/,'Home Appliances'],
+    [/electronic|gadget|headphone|speaker|camera/,'Electronics'], [/fashion|clothing|apparel|wear|style/,'Women']
+  ];
+  const match = aliases.find(([pattern]) => pattern.test(heading));
+  const curated = match && categories.find((item) => item.name === match[1]);
+  return curated?.image ? { uri: curated.image } : { uri: HOME_SHOPPING_PHOTO };
+};
 const categoryImageFor = (name = '', productList = []) => {
   const normalizedName = name.trim().toLowerCase();
   const localCategory = categories.find((item) => item.name.trim().toLowerCase() === normalizedName);
@@ -233,8 +244,8 @@ function CategoryTile({ category, products, navigation }) {
 }
 function HomeHeroCard({ card, width, navigation }) {
   const [imageIndex, setImageIndex] = useState(0);
-  const toImageSource = (image) => typeof image === 'number' ? image : image ? { uri: fullImage(image) } : null;
-  const sources = [toImageSource(card.image), toImageSource(card.product?.image), homeImageFor(card.category, card.title), HOME_HERO_IMAGE].filter(Boolean);
+  const toImageSource = (image) => typeof image === 'number' ? image : image ? (typeof image === 'object' ? image : { uri: fullImage(image) }) : null;
+  const sources = [toImageSource(card.image), toImageSource(card.product?.image), homeImageFor(card.category, card.title), { uri: HOME_SHOPPING_PHOTO }].filter(Boolean);
   const source = sources[Math.min(imageIndex, sources.length - 1)];
   const open = () => {
     if (card.product) navigation.navigate('Product', { product: card.product });
