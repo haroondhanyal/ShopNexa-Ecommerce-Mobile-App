@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "ShopNexa",
+    "slug": "shopnexa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#f5f7fc"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ShopNexa to choose profile photos and product images or videos."
+        }
+      ],
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.shopnexa.app",
+      "softwareKeyboardLayoutMode": "resize"
+    }
+  }
+}

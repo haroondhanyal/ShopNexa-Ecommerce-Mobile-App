@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+.env
+.env.*
+!.env.example
+dist/
+web-build/
+coverage/
+*.log
