@@ -23,6 +23,7 @@ const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const BLUE = '#2451c5';
 const PAYMENT_LABELS = { COD: 'Cash on delivery', BANK_TRANSFER: 'Bank transfer', EASYPAISA: 'Easypaisa wallet', JAZZCASH: 'JazzCash wallet', DEMO_CARD: 'Offline demo card (no real charge)' };
+const HOME_HERO_IMAGE = require('./assets/home-shopping-hero.png');
 const THEME_COLORS = [
   { name: 'Ocean', color: '#2451c5' }, { name: 'Violet', color: '#7047c8' },
   { name: 'Rose', color: '#b13258' }, { name: 'Coral', color: '#b83c2a' },
@@ -198,10 +199,32 @@ function SearchBar({ value, onChangeText, onSubmitEditing }) {
   return <View style={styles.search}><Ionicons name="search-outline" size={21} color="#91a0b5" /><TextInput value={value} onChangeText={onChangeText} onSubmitEditing={onSubmitEditing} returnKeyType="search" placeholder="Search products" placeholderTextColor="#93a0b2" style={styles.searchInput} /></View>;
 }
 function ProductCard({ item, navigation }) {
-  const { wishlist, toggleWish } = useShop(); const wished = wishlist.some((p) => p._id === item._id);
+  const { wishlist, toggleWish } = useShop(); const wished = wishlist.some((p) => p._id === item._id); const [imageFailed, setImageFailed] = useState(false);
   return <Pressable style={styles.productCard} onPress={() => navigation.navigate('Product', { product: item })}>
-    <View><Image source={{ uri: fullImage(item.image) }} style={styles.productImage} /><Pressable onPress={(event) => { event.stopPropagation(); toggleWish(item); }} style={styles.heart}><Ionicons name={wished ? 'heart' : 'heart-outline'} size={19} color={wished ? '#e34d67' : '#1d2939'} /></Pressable>{item.stock === 0 && <Text style={styles.soldOut}>Sold out</Text>}</View>
+    <View><Image source={imageFailed || !item.image ? HOME_HERO_IMAGE : { uri: fullImage(item.image) }} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.productImage} /><Pressable onPress={(event) => { event.stopPropagation(); toggleWish(item); }} style={styles.heart}><Ionicons name={wished ? 'heart' : 'heart-outline'} size={19} color={wished ? '#e34d67' : '#1d2939'} /></Pressable>{item.stock === 0 && <Text style={styles.soldOut}>Sold out</Text>}</View>
     {item.hotSelling ? <Text style={styles.bannerTag}>HOT SELLING</Text> : null}{item.brand ? <Text numberOfLines={1} style={styles.muted}>{item.brand}</Text> : null}<Text numberOfLines={1} style={styles.productName}>{item.name}</Text><Text style={styles.productPrice}>{money(item.price)}</Text><Text style={styles.rating}>{item.reviewCount ? `★ ${item.rating}` : 'New · no ratings'} <Text style={styles.muted}> · {item.stock > 0 ? 'In stock' : 'Out of stock'}</Text></Text>
+  </Pressable>;
+}
+function CategoryTile({ category, products, navigation }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const product = products.find((item) => item.category === category.name && item.image);
+  const source = imageFailed ? HOME_HERO_IMAGE : category.image ? { uri: fullImage(category.image) } : product?.image ? { uri: fullImage(product.image) } : HOME_HERO_IMAGE;
+  return <Pressable style={styles.categoryItem} onPress={() => navigation.navigate('Shop', { search: '', category: category.name })}><Image source={source} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.categoryImage} /><Text numberOfLines={2} style={styles.categoryName}>{category.name}</Text></Pressable>;
+}
+function HomeHeroCard({ card, width, navigation }) {
+  const [imageIndex, setImageIndex] = useState(0);
+  const toImageSource = (image) => typeof image === 'number' ? image : image ? { uri: fullImage(image) } : null;
+  const sources = [toImageSource(card.image), toImageSource(card.product?.image), HOME_HERO_IMAGE].filter(Boolean);
+  const source = sources[Math.min(imageIndex, sources.length - 1)];
+  const open = () => {
+    if (card.product) navigation.navigate('Product', { product: card.product });
+    else if (card.category) navigation.navigate('Shop', { search: '', category: card.category });
+    else navigation.navigate('Shop');
+  };
+  return <Pressable style={[styles.banner, { width }]} onPress={open}>
+    <Image source={source} onError={() => setImageIndex((index) => Math.min(index + 1, sources.length - 1))} resizeMode="cover" style={StyleSheet.absoluteFillObject} />
+    <View style={styles.bannerShade} /><Text style={styles.bannerTag}>{card.isVideo ? 'PRODUCT VIDEO' : card.category || 'SHOPNEXA PICKS'}</Text><Text numberOfLines={2} style={styles.bannerTitle}>{card.title}</Text><Text numberOfLines={1} style={styles.bannerSub}>{card.subtitle}</Text>
+    {card.video ? <Pressable onPress={(event) => { event.stopPropagation(); Linking.openURL(fullImage(card.video)); }} style={[styles.bannerArrow, { right: 62, transform: [] }]}><Ionicons name="play" size={18} color="#172033" /></Pressable> : null}<View style={[styles.bannerArrow, card.video && { transform: [] }]}><Ionicons name="arrow-forward" size={20} color="#172033" /></View>
   </Pressable>;
 }
 function HomeScreen({ navigation }) {
@@ -210,7 +233,15 @@ function HomeScreen({ navigation }) {
   const activeOffers = [...new Map(filtered.filter((product) => product.hotSelling && product.stock > 0).map((product) => [product.brand?.trim().toLowerCase() || product._id, product])).values()].slice(0, 8);
   const arrivals = [...filtered].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
   const recommended = [...filtered].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 8);
-  const campaignData = (banners.length ? banners : [{ _id: 'default-men', title: 'Find your everyday style', subtitle: 'Fresh picks, made for you', category: 'Men', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1100&auto=format&fit=crop&q=85' }, { _id: 'default-watch', title: 'Little details. Big feeling.', subtitle: 'Explore the watch edit', category: "Women's Watches", image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1100&auto=format&fit=crop&q=85' }]).map((item) => ({ ...item, product: products.find((product) => product.category === item.category) }));
+  const campaignDefaults = [
+    { _id: 'default-phones', title: 'Find your everyday favourite', subtitle: 'Explore phones picked for you', category: 'Mobile Phones', image: products.find((product) => product.category === 'Mobile Phones')?.image },
+    { _id: 'default-computers', title: 'Make room for big ideas', subtitle: 'Laptops and computers, ready to explore', category: 'Laptops & Computers', image: products.find((product) => product.category === 'Laptops & Computers')?.image },
+    { _id: 'default-home', title: 'A little more comfort at home', subtitle: 'See the home appliance edit', category: 'Home Appliances', image: products.find((product) => product.category === 'Home Appliances')?.image }
+  ];
+  const campaignData = (banners.length ? banners : campaignDefaults).map((item) => {
+    const product = products.find((product) => product.category === item.category) || null;
+    return { ...item, title: item.title || product?.name || item.category || 'ShopNexa picks', subtitle: item.subtitle || (product ? `${product.brand || ''} · ${money(product.price)} · Tap to explore` : 'Explore the collection'), image: item.image || product?.image || HOME_HERO_IMAGE, product };
+  });
   const featuredHeroItems = products.filter((product) => product.hotSelling || product.featured).slice(0, 6).map((product) => ({ _id: `product-${product._id}`, title: product.name, subtitle: `${product.brand ? `${product.brand} · ` : ''}${money(product.price)} · Tap to view`, category: product.category, image: product.image, product, video: product.video }));
   const videoHeroItems = products.filter((product) => product.video).slice(0, 4).map((product) => ({ _id: `video-${product._id}`, title: `${product.name} · product video`, subtitle: `${product.brand ? `${product.brand} · ` : ''}Watch the product video`, category: product.category, image: product.image, product, video: product.video, isVideo: true }));
   const heroItems = [...campaignData, ...featuredHeroItems, ...videoHeroItems];
@@ -219,31 +250,31 @@ function HomeScreen({ navigation }) {
   useEffect(() => { heroScrollRef.current?.scrollTo({ x: heroIndex * (heroCardWidth + 12), animated: true }); }, [heroIndex, heroCardWidth]);
   const scroll = useSafeAreaInsets();
   return <View style={styles.screen}><StatusBar style={appearanceColors.statusBarStyle} /><Header navigation={navigation} /><ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshCatalog} tintColor={BLUE} colors={[BLUE]} />} contentContainerStyle={{ paddingBottom: 100 + scroll.bottom }} showsVerticalScrollIndicator={false}>
-    <View style={styles.searchWrap}><SearchBar value={query} onChangeText={setQuery} onSubmitEditing={() => navigation.navigate('Shop', { search: query })} /></View>
-    <ScrollView ref={heroScrollRef} horizontal snapToInterval={heroCardWidth + 12} snapToAlignment="start" decelerationRate="fast" showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.bannerRow, { paddingRight: 18 }]} onMomentumScrollEnd={(event) => setHeroIndex(Math.round(event.nativeEvent.contentOffset.x / (heroCardWidth + 12)))}>{heroItems.map((card) => <Pressable key={card._id} style={[styles.banner, { width: heroCardWidth }]} onPress={() => card.product ? navigation.navigate('Product', { product: card.product }) : card.category ? (setActive(card.category), navigation.navigate('Shop', { search: '' })) : null}><Image source={{ uri: fullImage(card.image) }} style={StyleSheet.absoluteFillObject} /><View style={styles.bannerShade} /><Text style={styles.bannerTag}>{card.isVideo ? 'PRODUCT VIDEO' : card.category || 'SHOPNEXA PICKS'}</Text><Text numberOfLines={2} style={styles.bannerTitle}>{card.title}</Text><Text numberOfLines={1} style={styles.bannerSub}>{card.subtitle}</Text>{card.video ? <Pressable onPress={(event) => { event.stopPropagation(); Linking.openURL(fullImage(card.video)); }} style={[styles.bannerArrow, { right: 62, transform: [] }]}><Ionicons name="play" size={18} color="#172033" /></Pressable> : null}<View style={[styles.bannerArrow, card.video && { transform: [] }]}><Ionicons name="arrow-forward" size={20} color="#172033" /></View></Pressable>)}</ScrollView>
+    <View style={styles.searchWrap}><SearchBar value={query} onChangeText={setQuery} onSubmitEditing={() => navigation.navigate('Shop', { search: query, category: 'All' })} /></View>
+    <ScrollView ref={heroScrollRef} horizontal snapToInterval={heroCardWidth + 12} snapToAlignment="start" decelerationRate="fast" showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.bannerRow, { paddingRight: 18 }]} onMomentumScrollEnd={(event) => setHeroIndex(Math.round(event.nativeEvent.contentOffset.x / (heroCardWidth + 12)))}>{heroItems.map((card) => <HomeHeroCard key={card._id} card={card} width={heroCardWidth} navigation={navigation} />)}</ScrollView>
     <View style={styles.dashes}>{heroItems.slice(0, 8).map((item, index) => <View key={item._id} style={[styles.dashMuted, index === heroIndex % Math.min(heroItems.length, 8) && styles.dashActive]} />)}</View>
-    <SectionTitle title="Categories" action="See all" onPress={() => navigation.navigate('Shop')} />
-    <View style={styles.categoryGrid}>{categoryItems.map((category) => <Pressable key={category.name} style={styles.categoryItem} onPress={() => { setActive(category.name); setQuery(''); }}><Image source={{ uri: fullImage(category.image) }} style={styles.categoryImage} /><Text numberOfLines={2} style={styles.categoryName}>{category.name}</Text></Pressable>)}</View>
-    <SectionTitle title="Active offers · Hot selling" action="See all" onPress={() => navigation.navigate('Shop')} />
+    <SectionTitle title="Categories" action="See all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
+    <View style={styles.categoryGrid}>{(categoryItems.length ? categoryItems : ['Mobile Phones', 'Laptops & Computers', 'Home Appliances', 'Fashion', 'Home & Kitchen'].map((name) => ({ name, image: '' }))).map((category) => <CategoryTile key={category.name} category={category} products={products} navigation={navigation} />)}</View>
+    <SectionTitle title="Active offers · Hot selling" action="See all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
     {activeOffers.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productsRow}>{activeOffers.map((item) => <ProductCard key={`offer-${item._id}`} item={item} navigation={navigation} />)}</ScrollView> : <Text style={[styles.muted, { marginHorizontal: 19 }]}>New hot-selling offers will appear here.</Text>}
-    <SectionTitle title="Featured" action="See all" onPress={() => navigation.navigate('Shop')} />
+    <SectionTitle title="Featured" action="See all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productsRow}>{filtered.filter((p) => p.featured).map((item) => <ProductCard key={item._id} item={item} navigation={navigation} />)}</ScrollView>
-    <SectionTitle title="New arrivals" action="See all" onPress={() => navigation.navigate('Shop')} />
+    <SectionTitle title="New arrivals" action="See all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productsRow}>{arrivals.map((item) => <ProductCard key={`new-${item._id}`} item={item} navigation={navigation} />)}</ScrollView>
-    <SectionTitle title="Recommended for you" action="See all" onPress={() => navigation.navigate('Shop')} />
+    <SectionTitle title="Recommended for you" action="See all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productsRow}>{recommended.map((item) => <ProductCard key={`recommended-${item._id}`} item={item} navigation={navigation} />)}</ScrollView>
-    <SectionTitle title={active === 'All' ? 'Popular right now' : active} action="View all" onPress={() => navigation.navigate('Shop')} />
+    <SectionTitle title={active === 'All' ? 'Popular right now' : active} action="View all" onPress={() => navigation.navigate('Shop', { search: '', category: 'All' })} />
     <View style={styles.grid}>{filtered.map((item) => <ProductCard key={item._id} item={item} navigation={navigation} />)}</View>
   </ScrollView></View>;
 }
 function SectionTitle({ title, action, onPress }) { return <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>{title}</Text><Pressable onPress={onPress}><Text style={styles.link}>{action}</Text></Pressable></View>; }
 function ShopScreen({ navigation, route }) {
   const { products, categoryItems } = useShop();
-  const [query, setQuery] = useState(route.params?.search || ''); const [category, setCategory] = useState('All'); const [recentSearches, setRecentSearches] = useState([]);
+  const [query, setQuery] = useState(route.params?.search || ''); const [category, setCategory] = useState(route.params?.category || 'All'); const [recentSearches, setRecentSearches] = useState([]);
   const [sort, setSort] = useState('featured'); const [filtersOpen, setFiltersOpen] = useState(false);
   const [minPrice, setMinPrice] = useState(''); const [maxPrice, setMaxPrice] = useState(''); const [appliedRange, setAppliedRange] = useState({ min: 0, max: Infinity });
   useEffect(() => { AsyncStorage.getItem('shopnexa.recentSearches').then((value) => value && setRecentSearches(JSON.parse(value))).catch(() => {}); }, []);
-  useEffect(() => { if (route.params?.search !== undefined) { setQuery(route.params.search); const term = route.params.search.trim(); if (term) AsyncStorage.getItem('shopnexa.recentSearches').then((value) => { const old = value ? JSON.parse(value) : []; const next = [term, ...old.filter((item) => item.toLowerCase() !== term.toLowerCase())].slice(0, 6); setRecentSearches(next); return AsyncStorage.setItem('shopnexa.recentSearches', JSON.stringify(next)); }).catch(() => {}); } }, [route.params?.search]);
+  useEffect(() => { if (route.params?.search !== undefined) { setQuery(route.params.search); const term = route.params.search.trim(); if (term) AsyncStorage.getItem('shopnexa.recentSearches').then((value) => { const old = value ? JSON.parse(value) : []; const next = [term, ...old.filter((item) => item.toLowerCase() !== term.toLowerCase())].slice(0, 6); setRecentSearches(next); return AsyncStorage.setItem('shopnexa.recentSearches', JSON.stringify(next)); }).catch(() => {}); } if (route.params?.category !== undefined) setCategory(route.params.category); }, [route.params?.search, route.params?.category]);
   const rememberSearch = async (value = query) => { const term = value.trim(); if (!term) return; const next = [term, ...recentSearches.filter((item) => item.toLowerCase() !== term.toLowerCase())].slice(0, 6); setRecentSearches(next); await AsyncStorage.setItem('shopnexa.recentSearches', JSON.stringify(next)); };
   const filtered = products.filter((product) => (category === 'All' || product.category === category) && product.name.toLowerCase().includes(query.toLowerCase()) && product.price >= appliedRange.min && product.price <= appliedRange.max);
   const suggestions = query.trim() ? products.filter((product) => product.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 5) : [];
