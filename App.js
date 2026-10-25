@@ -24,6 +24,10 @@ const Stack = createNativeStackNavigator();
 const BLUE = '#2451c5';
 const PAYMENT_LABELS = { COD: 'Cash on delivery', BANK_TRANSFER: 'Bank transfer', EASYPAISA: 'Easypaisa wallet', JAZZCASH: 'JazzCash wallet', DEMO_CARD: 'Offline demo card (no real charge)' };
 const HOME_HERO_IMAGE = require('./assets/home-shopping-hero.png');
+const HOME_FASHION_IMAGE = require('./assets/home-fashion.png');
+const HOME_TECH_IMAGE = require('./assets/home-tech.png');
+const HOME_APPLIANCES_IMAGE = require('./assets/home-appliances.png');
+const homeImageFor = (category = '', title = '') => { const heading = `${category} ${title}`.toLowerCase(); if (/phone|mobile|laptop|computer|tech|electronic|gadget/.test(heading)) return HOME_TECH_IMAGE; if (/home|appliance|kitchen|fridge|refrigerator|oven|tv|furniture/.test(heading)) return HOME_APPLIANCES_IMAGE; if (/fashion|clothing|apparel|wear|men|women|watch|shoe|beauty|style/.test(heading)) return HOME_FASHION_IMAGE; return HOME_HERO_IMAGE; };
 const THEME_COLORS = [
   { name: 'Ocean', color: '#2451c5' }, { name: 'Violet', color: '#7047c8' },
   { name: 'Rose', color: '#b13258' }, { name: 'Coral', color: '#b83c2a' },
@@ -201,20 +205,20 @@ function SearchBar({ value, onChangeText, onSubmitEditing }) {
 function ProductCard({ item, navigation }) {
   const { wishlist, toggleWish } = useShop(); const wished = wishlist.some((p) => p._id === item._id); const [imageFailed, setImageFailed] = useState(false);
   return <Pressable style={styles.productCard} onPress={() => navigation.navigate('Product', { product: item })}>
-    <View><Image source={imageFailed || !item.image ? HOME_HERO_IMAGE : { uri: fullImage(item.image) }} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.productImage} /><Pressable onPress={(event) => { event.stopPropagation(); toggleWish(item); }} style={styles.heart}><Ionicons name={wished ? 'heart' : 'heart-outline'} size={19} color={wished ? '#e34d67' : '#1d2939'} /></Pressable>{item.stock === 0 && <Text style={styles.soldOut}>Sold out</Text>}</View>
+    <View><Image source={imageFailed || !item.image ? homeImageFor(item.category, item.name) : { uri: fullImage(item.image) }} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.productImage} /><Pressable onPress={(event) => { event.stopPropagation(); toggleWish(item); }} style={styles.heart}><Ionicons name={wished ? 'heart' : 'heart-outline'} size={19} color={wished ? '#e34d67' : '#1d2939'} /></Pressable>{item.stock === 0 && <Text style={styles.soldOut}>Sold out</Text>}</View>
     {item.hotSelling ? <Text style={styles.bannerTag}>HOT SELLING</Text> : null}{item.brand ? <Text numberOfLines={1} style={styles.muted}>{item.brand}</Text> : null}<Text numberOfLines={1} style={styles.productName}>{item.name}</Text><Text style={styles.productPrice}>{money(item.price)}</Text><Text style={styles.rating}>{item.reviewCount ? `★ ${item.rating}` : 'New · no ratings'} <Text style={styles.muted}> · {item.stock > 0 ? 'In stock' : 'Out of stock'}</Text></Text>
   </Pressable>;
 }
 function CategoryTile({ category, products, navigation }) {
   const [imageFailed, setImageFailed] = useState(false);
   const product = products.find((item) => item.category === category.name && item.image);
-  const source = imageFailed ? HOME_HERO_IMAGE : category.image ? { uri: fullImage(category.image) } : product?.image ? { uri: fullImage(product.image) } : HOME_HERO_IMAGE;
+  const source = imageFailed ? homeImageFor(category.name) : category.image ? { uri: fullImage(category.image) } : product?.image ? { uri: fullImage(product.image) } : homeImageFor(category.name);
   return <Pressable style={styles.categoryItem} onPress={() => navigation.navigate('Shop', { search: '', category: category.name })}><Image source={source} onError={() => setImageFailed(true)} resizeMode="cover" style={styles.categoryImage} /><Text numberOfLines={2} style={styles.categoryName}>{category.name}</Text></Pressable>;
 }
 function HomeHeroCard({ card, width, navigation }) {
   const [imageIndex, setImageIndex] = useState(0);
   const toImageSource = (image) => typeof image === 'number' ? image : image ? { uri: fullImage(image) } : null;
-  const sources = [toImageSource(card.image), toImageSource(card.product?.image), HOME_HERO_IMAGE].filter(Boolean);
+  const sources = [toImageSource(card.image), toImageSource(card.product?.image), homeImageFor(card.category, card.title), HOME_HERO_IMAGE].filter(Boolean);
   const source = sources[Math.min(imageIndex, sources.length - 1)];
   const open = () => {
     if (card.product) navigation.navigate('Product', { product: card.product });
@@ -240,7 +244,7 @@ function HomeScreen({ navigation }) {
   ];
   const campaignData = (banners.length ? banners : campaignDefaults).map((item) => {
     const product = products.find((product) => product.category === item.category) || null;
-    return { ...item, title: item.title || product?.name || item.category || 'ShopNexa picks', subtitle: item.subtitle || (product ? `${product.brand || ''} · ${money(product.price)} · Tap to explore` : 'Explore the collection'), image: item.image || product?.image || HOME_HERO_IMAGE, product };
+    return { ...item, title: item.title || product?.name || item.category || 'ShopNexa picks', subtitle: item.subtitle || (product ? `${product.brand || ''} · ${money(product.price)} · Tap to explore` : 'Explore the collection'), image: item.image || product?.image || homeImageFor(item.category, item.title), product };
   });
   const featuredHeroItems = products.filter((product) => product.hotSelling || product.featured).slice(0, 6).map((product) => ({ _id: `product-${product._id}`, title: product.name, subtitle: `${product.brand ? `${product.brand} · ` : ''}${money(product.price)} · Tap to view`, category: product.category, image: product.image, product, video: product.video }));
   const videoHeroItems = products.filter((product) => product.video).slice(0, 4).map((product) => ({ _id: `video-${product._id}`, title: `${product.name} · product video`, subtitle: `${product.brand ? `${product.brand} · ` : ''}Watch the product video`, category: product.category, image: product.image, product, video: product.video, isVideo: true }));
