@@ -13,44 +13,6 @@ ShopNexa is a cross-platform shopping app with a guest-friendly storefront and s
 
 The home experience includes an illustrated campaign carousel and image-led category cards. Navigation is available through the bottom tabs and the scrollable side drawer. The drawer also provides ten accent colours and system appearance choices.
 
-## Fresh app screenshots
-
-These screenshots were captured from the Android app running in a Pixel 7 Pro emulator on October 26, 2026. They include the guest flow, local catalogue fallback, and empty states shown before an account has customer data.
-
-| Onboarding | Home, campaigns and category cards |
-|---|---|
-| ![ShopNexa onboarding](docs/screenshots/01-onboarding.png) | ![ShopNexa home screen](docs/screenshots/02-home.png) |
-
-| All category cards | Discover products |
-|---|---|
-| ![Home categories](docs/screenshots/03-home-categories.png) | ![Shop and category filters](docs/screenshots/04-shop.png) |
-
-| Wishlist empty state | Orders empty state |
-|---|---|
-| ![Wishlist](docs/screenshots/05-wishlist.png) | ![Orders](docs/screenshots/06-orders.png) |
-
-| Profile as guest | Sign in and role selection |
-|---|---|
-| ![Profile](docs/screenshots/07-profile.png) | ![Sign in](docs/screenshots/08-sign-in.png) |
-
-| Create account and customer or shop-owner choice | Full navigation drawer, theme controls and categories |
-|---|---|
-| ![Sign up](docs/screenshots/09-sign-up.png) | ![Navigation drawer](docs/screenshots/10-drawer.png) |
-
-| Help and support | Shopping bag empty state |
-|---|---|
-| ![Help and support](docs/screenshots/11-support.png) | ![Empty shopping bag](docs/screenshots/12-cart-empty.png) |
-
-| Drawer appearance controls | Product cards |
-|---|---|
-| ![Appearance themes in the drawer](docs/screenshots/13-drawer-appearance.png) | ![Product card grid](docs/screenshots/14-product-grid.png) |
-
-| Product details | Admin mobile sign-in |
-|---|---|
-| ![Product details](docs/screenshots/15-product-details.png) | ![Mobile admin sign-in](docs/screenshots/16-admin-sign-in.png) |
-
-> Checkout, saved addresses, linked wallets, seller tools, and the admin dashboard depend on a reachable API and the appropriate account role. The admin sign-in screen is included; authenticated dashboards and populated account data are not fabricated. Connect the backend and sign in with demo data to view those states.
-
 ## Screen and component map
 
 ### Shopper experience
@@ -96,7 +58,6 @@ mobile/
 │   ├── data/catalog.js        # Category and catalogue presentation data
 │   └── screens/AdminScreen.js # Mobile administrator workspace
 ├── assets/                    # Home artwork, bank and wallet marks, app logo
-├── docs/screenshots/          # Fresh Android UI captures for this README
 ├── app.json                   # Expo app configuration
 ├── package.json
 └── README.md
